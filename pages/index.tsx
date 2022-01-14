@@ -1,5 +1,6 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
+import { useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 const Container = styled.div`
@@ -10,6 +11,7 @@ const Container = styled.div`
   height: 100vh;
   min-height: 100vh;
   padding: 0 0.5rem;
+  background-color: green;
 `
 
 const Main = styled.main`
@@ -21,21 +23,45 @@ const Main = styled.main`
   padding: 5rem 0;
 `
 
-const Title = styled.h1`
-  margin: 0;
-  font-size: 4rem;
-  line-height: 1.15;
-  text-align: center;
+const Board = styled.div`
+  width: 480px;
+  height: 480px;
+  font-size: 0;
+  background-color: white;
+  border: 0 solid;
+`
 
-  a {
-    color: #0070f3;
-    text-decoration: none;
-  }
-  a:hover,
-  a:focus,
-  a:active {
-    text-decoration: underline;
-  }
+const Cell = styled.div`
+  display: inline-block;
+  width: 60px;
+  height: 60px;
+  border: 1px solid;
+  border-color: black;
+`
+
+const Stonecandidate = styled.div`
+  width: 50px;
+  height: 50px;
+  margin: 5px;
+  background: yellow;
+  border-radius: 50%;
+`
+const Stoneblack = styled.div`
+  width: 50px;
+  height: 50px;
+  margin: 5px;
+  background: black;
+  border-radius: 50%;
+`
+
+const Stonewhite = styled.div`
+  width: 50px;
+  height: 50px;
+  margin: 5px;
+  background: white;
+  border: 1px solid;
+  border-color: black;
+  border-radius: 50%;
 `
 
 const Description = styled.p`
@@ -119,6 +145,134 @@ const Logo = styled.span`
 `
 
 const Home: NextPage = () => {
+  // prettier-ignore
+  const [board, setBoard] = useState([
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 2, 0, 0, 0],
+    [0, 0, 0, 2, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ])
+  const [currentTurn, setTurn] = useState(1)
+  const directions = [
+    [-1, -1],
+    [0, -1],
+    [1, -1],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+    [-1, 1],
+    [-1, 0],
+  ]
+  const otherStorn = 3 - currentTurn
+  const puttableBoard = useMemo(() => {
+    // prettier-ignore
+    // const tempBoard = [
+    //   [0, 0, 0, 0, 0, 0, 0, 0],
+    //   [0, 0, 0, 0, 0, 0, 0, 0],
+    //   [0, 0, 0, 0, 0, 0, 0, 0],
+    //   [0, 0, 0, 1, 2, 0, 0, 0],
+    //   [0, 0, 0, 2, 1, 0, 0, 0],
+    //   [0, 0, 0, 0, 0, 0, 0, 0],
+    //   [0, 0, 0, 0, 0, 0, 0, 0],
+    //   [0, 0, 0, 0, 0, 0, 0, 0],
+    // ]
+    const tempBoard: number[][] = JSON.parse(JSON.stringify(board))
+    const candidates: { y: number; x: number }[] = []
+    board.forEach((row, y2) =>
+      row.forEach((color, x2) => {
+        // console.log(board, 'board')
+        // console.log(tempBoard, 'tempBoard')
+        if (tempBoard[y2][x2] === currentTurn) {
+          console.log(y2, 'syokitate')
+          console.log(x2, 'syokiyoko')
+          for (const direction in directions) {
+            let tate = y2
+            let yoko = x2
+            for (let number = 1; number < 8; number++) {
+              tate = y2 + directions[direction][1] * number
+              yoko = x2 + directions[direction][0] * number
+              if (0 < tate && 7 > tate && 0 < yoko && 7 > yoko) {
+                if (tempBoard[tate][yoko] === otherStorn) {
+                  console.log(tate, 'Tate')
+                  console.log(yoko, 'Yoko')
+                  const okesounaTate = tate + directions[direction][1]
+                  const okesounaYoko = yoko + directions[direction][0]
+                  if (tempBoard[okesounaTate][okesounaYoko] === 0) {
+                    console.log(tempBoard[okesounaTate][okesounaYoko], 'zahyou')
+                    console.log(okesounaTate, 'okesounaTate')
+                    console.log(okesounaYoko, 'okesounaYoko')
+                    candidates.push({ y: okesounaTate, x: okesounaYoko })
+                    // break
+                  }
+                } else {
+                  console.log(directions[direction][1], 'hougakutate')
+                  console.log(directions[direction][0], 'hougakuyoko')
+                  console.log(tempBoard[tate][yoko], 'hajikaretaishi')
+                }
+              }
+            }
+          }
+        }
+      })
+    )
+    // console.log(candidates, 'candidates')
+    for (const candidate in candidates) {
+      if (tempBoard[candidates[candidate].y][candidates[candidate].x] === 0) {
+        tempBoard[candidates[candidate].y][candidates[candidate].x] = 3
+      }
+    }
+    return tempBoard
+  }, [board])
+  console.log(puttableBoard, 'puttable')
+
+  const onClick = (x: number, y: number, color: number) => {
+    const newBoard: number[][] = JSON.parse(JSON.stringify(board))
+    const directions = [
+      [-1, -1],
+      [0, -1],
+      [1, -1],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+      [-1, 1],
+      [-1, 0],
+    ]
+    const turnables: { y: number; x: number }[] = []
+    for (const direction in directions) {
+      let vertical = y
+      let beside = x
+      const candidates: { y: number; x: number }[] = []
+      for (let number = 1; number < 8; number++) {
+        vertical = y + directions[direction][1] * number
+        beside = x + directions[direction][0] * number
+        if (-1 < vertical && 8 > vertical && -1 < beside && 8 > beside) {
+          // if (newBoard[vertical][beside] === 0 && newBoard[vertical][beside] === 3) {
+          if (newBoard[vertical][beside] === 0) {
+            break
+          } else if (newBoard[vertical][beside] !== currentTurn) {
+            console.log(newBoard[vertical][beside])
+            candidates.push({ y: vertical, x: beside })
+          } else {
+            turnables.push(...candidates)
+          }
+        }
+      }
+      for (const turnable in turnables) {
+        newBoard[turnables[turnable].y][turnables[turnable].x] = currentTurn
+      }
+    }
+    if (turnables.length) {
+      console.log(turnables, 'turnables')
+      newBoard[y][x] = currentTurn
+      setBoard(newBoard)
+      const turn = currentTurn === 1 ? 2 : 1
+      setTurn(turn)
+    }
+  }
   return (
     <Container>
       <Head>
@@ -128,35 +282,17 @@ const Home: NextPage = () => {
       </Head>
 
       <Main>
-        <Title>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </Title>
-
-        <Description>
-          Get started by editing <Code>pages/index.js</Code>
-        </Description>
-
-        <Grid>
-          <Card href="https://nextjs.org/docs">
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </Card>
-
-          <Card href="https://nextjs.org/learn">
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </Card>
-
-          <Card href="https://github.com/vercel/next.js/tree/master/examples">
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </Card>
-
-          <Card href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app">
-            <h2>Deploy &rarr;</h2>
-            <p>Instantly deploy your Next.js site to a public URL with Vercel.</p>
-          </Card>
-        </Grid>
+        <Board>
+          {board.map((row, y) =>
+            row.map((color, x) => (
+              <Cell key={x} onClick={() => onClick(x, y, color)}>
+                {color === 1 && <Stoneblack></Stoneblack>}
+                {color === 2 && <Stonewhite></Stonewhite>}
+                {color === 0 && puttableBoard[y][x] === 3 && <Stonecandidate></Stonecandidate>}
+              </Cell>
+            ))
+          )}
+        </Board>
       </Main>
 
       <Footer>
