@@ -167,7 +167,9 @@ const Home: NextPage = () => {
     [-1, 1],
     [-1, 0],
   ]
-  const otherStorn = 3 - currentTurn
+  // const passBoard: number[][] = JSON.parse(JSON.stringify(board))
+  // const pass: { y: number; x: number }[] = []
+  let passFlg = false
   const puttableBoard = useMemo(() => {
     // prettier-ignore
     // const tempBoard = [
@@ -182,36 +184,34 @@ const Home: NextPage = () => {
     // ]
     const tempBoard: number[][] = JSON.parse(JSON.stringify(board))
     const candidates: { y: number; x: number }[] = []
+    const otherStorn = 3 - currentTurn
     board.forEach((row, y2) =>
       row.forEach((color, x2) => {
-        // console.log(board, 'board')
-        // console.log(tempBoard, 'tempBoard')
         if (tempBoard[y2][x2] === currentTurn) {
-          console.log(y2, 'syokitate')
-          console.log(x2, 'syokiyoko')
+          // console.log(y2, 'syokitate')
+          // console.log(x2, 'syokiyoko')
           for (const direction in directions) {
             let tate = y2
             let yoko = x2
             for (let number = 1; number < 8; number++) {
               tate = y2 + directions[direction][1] * number
               yoko = x2 + directions[direction][0] * number
-              if (0 < tate && 7 > tate && 0 < yoko && 7 > yoko) {
+              if (0 <= tate && 7 >= tate && 0 <= yoko && 7 >= yoko) {
                 if (tempBoard[tate][yoko] === otherStorn) {
-                  console.log(tate, 'Tate')
-                  console.log(yoko, 'Yoko')
                   const okesounaTate = tate + directions[direction][1]
                   const okesounaYoko = yoko + directions[direction][0]
-                  if (tempBoard[okesounaTate][okesounaYoko] === 0) {
-                    console.log(tempBoard[okesounaTate][okesounaYoko], 'zahyou')
-                    console.log(okesounaTate, 'okesounaTate')
-                    console.log(okesounaYoko, 'okesounaYoko')
-                    candidates.push({ y: okesounaTate, x: okesounaYoko })
-                    // break
+                  if (
+                    0 <= okesounaTate &&
+                    7 >= okesounaTate &&
+                    0 <= okesounaYoko &&
+                    7 >= okesounaYoko
+                  ) {
+                    if (tempBoard[okesounaTate][okesounaYoko] === 0) {
+                      candidates.push({ y: okesounaTate, x: okesounaYoko })
+                    }
                   }
                 } else {
-                  console.log(directions[direction][1], 'hougakutate')
-                  console.log(directions[direction][0], 'hougakuyoko')
-                  console.log(tempBoard[tate][yoko], 'hajikaretaishi')
+                  break
                 }
               }
             }
@@ -220,14 +220,29 @@ const Home: NextPage = () => {
       })
     )
     // console.log(candidates, 'candidates')
-    for (const candidate in candidates) {
-      if (tempBoard[candidates[candidate].y][candidates[candidate].x] === 0) {
-        tempBoard[candidates[candidate].y][candidates[candidate].x] = 3
+    if (candidates.length) {
+      for (const candidate in candidates) {
+        if (tempBoard[candidates[candidate].y][candidates[candidate].x] === 0) {
+          tempBoard[candidates[candidate].y][candidates[candidate].x] = 3
+        }
       }
+    } else {
+      passFlg = true
+      // pass.push(...candidates)
+      // console.log(tempBoard)
+      // setTurn(3 - currentTurn)
+      // console.log(currentTurn)
     }
     return tempBoard
   }, [board])
-  console.log(puttableBoard, 'puttable')
+
+  // console.log(pass.length, 'pass')
+  if (passFlg) {
+    setTurn(3 - currentTurn)
+    setBoard(puttableBoard)
+    console.log(currentTurn, 'currentturn')
+  }
+  // pass.length = 0
 
   const onClick = (x: number, y: number, color: number) => {
     const newBoard: number[][] = JSON.parse(JSON.stringify(board))
@@ -249,7 +264,7 @@ const Home: NextPage = () => {
       for (let number = 1; number < 8; number++) {
         vertical = y + directions[direction][1] * number
         beside = x + directions[direction][0] * number
-        if (-1 < vertical && 8 > vertical && -1 < beside && 8 > beside) {
+        if (0 <= vertical && 7 >= vertical && 0 <= beside && 7 >= beside) {
           // if (newBoard[vertical][beside] === 0 && newBoard[vertical][beside] === 3) {
           if (newBoard[vertical][beside] === 0) {
             break
@@ -266,7 +281,6 @@ const Home: NextPage = () => {
       }
     }
     if (turnables.length) {
-      console.log(turnables, 'turnables')
       newBoard[y][x] = currentTurn
       setBoard(newBoard)
       const turn = currentTurn === 1 ? 2 : 1
