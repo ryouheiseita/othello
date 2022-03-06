@@ -64,6 +64,8 @@ const Stonewhite = styled.div`
   border-radius: 50%;
 `
 
+// const passModal = styled.div``
+
 const Description = styled.p`
   font-size: 1.5rem;
   line-height: 1.5;
@@ -188,8 +190,6 @@ const Home: NextPage = () => {
     board.forEach((row, y2) =>
       row.forEach((color, x2) => {
         if (tempBoard[y2][x2] === currentTurn) {
-          // console.log(y2, 'syokitate')
-          // console.log(x2, 'syokiyoko')
           for (const direction in directions) {
             let tate = y2
             let yoko = x2
@@ -219,7 +219,6 @@ const Home: NextPage = () => {
         }
       })
     )
-    // console.log(candidates, 'candidates')
     if (candidates.length) {
       for (const candidate in candidates) {
         if (tempBoard[candidates[candidate].y][candidates[candidate].x] === 0) {
@@ -228,21 +227,16 @@ const Home: NextPage = () => {
       }
     } else {
       passFlg = true
-      // pass.push(...candidates)
-      // console.log(tempBoard)
-      // setTurn(3 - currentTurn)
-      // console.log(currentTurn)
     }
     return tempBoard
   }, [board])
 
-  // console.log(pass.length, 'pass')
   if (passFlg) {
     setTurn(3 - currentTurn)
     setBoard(puttableBoard)
     console.log(currentTurn, 'currentturn')
+    // alert('パス')
   }
-  // pass.length = 0
 
   const onClick = (x: number, y: number, color: number) => {
     const newBoard: number[][] = JSON.parse(JSON.stringify(board))
@@ -265,7 +259,6 @@ const Home: NextPage = () => {
         vertical = y + directions[direction][1] * number
         beside = x + directions[direction][0] * number
         if (0 <= vertical && 7 >= vertical && 0 <= beside && 7 >= beside) {
-          // if (newBoard[vertical][beside] === 0 && newBoard[vertical][beside] === 3) {
           if (newBoard[vertical][beside] === 0) {
             break
           } else if (newBoard[vertical][beside] !== currentTurn) {
