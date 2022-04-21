@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 const Container = styled.div`
@@ -145,10 +145,22 @@ const Logo = styled.span`
   height: 1em;
   margin-left: 0.5rem;
 `
-
+let turnCount = 0
+let passCount = 0
 const Home: NextPage = () => {
   // prettier-ignore
   const [board, setBoard] = useState([
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 2, 1, 0, 0, 0],
+    [0, 0, 0, 1, 2, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ])
+  // prettier-ignore
+  const resetBoard = [
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
@@ -157,7 +169,7 @@ const Home: NextPage = () => {
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0],
-  ])
+  ]
   const [currentTurn, setTurn] = useState(1)
   const directions = [
     [-1, -1],
@@ -169,21 +181,8 @@ const Home: NextPage = () => {
     [-1, 1],
     [-1, 0],
   ]
-  // const passBoard: number[][] = JSON.parse(JSON.stringify(board))
-  // const pass: { y: number; x: number }[] = []
   let passFlg = false
   const puttableBoard = useMemo(() => {
-    // prettier-ignore
-    // const tempBoard = [
-    //   [0, 0, 0, 0, 0, 0, 0, 0],
-    //   [0, 0, 0, 0, 0, 0, 0, 0],
-    //   [0, 0, 0, 0, 0, 0, 0, 0],
-    //   [0, 0, 0, 1, 2, 0, 0, 0],
-    //   [0, 0, 0, 2, 1, 0, 0, 0],
-    //   [0, 0, 0, 0, 0, 0, 0, 0],
-    //   [0, 0, 0, 0, 0, 0, 0, 0],
-    //   [0, 0, 0, 0, 0, 0, 0, 0],
-    // ]
     const tempBoard: number[][] = JSON.parse(JSON.stringify(board))
     const candidates: { y: number; x: number }[] = []
     const otherStorn = 3 - currentTurn
@@ -226,17 +225,71 @@ const Home: NextPage = () => {
         }
       }
     } else {
-      passFlg = true
+      if (turnCount < 60) {
+        passFlg = true
+        passCount++
+        console.log(passCount, 'passCount1')
+      }
     }
     return tempBoard
   }, [board])
 
-  if (passFlg) {
-    setTurn(3 - currentTurn)
-    setBoard(puttableBoard)
-    console.log(currentTurn, 'currentturn')
-    // alert('パス')
-  }
+  useEffect(() => {
+    console.log(passCount, 'passCount2')
+    if (turnCount === 60) {
+      let black = 0
+      let white = 0
+      board.forEach((row, y3) =>
+        row.forEach((color, x3) => {
+          if (board[y3][x3] === 1) {
+            black++
+          } else {
+            white++
+          }
+        })
+      )
+      if (black > white) {
+        alert(black + '-' + white + '\n黒の勝ち')
+        turnCount = 0
+        passCount = 0
+        setBoard(resetBoard)
+      } else {
+        alert(black + '-' + white + '\n白の勝ち')
+        turnCount = 0
+        passCount = 0
+        setBoard(resetBoard)
+      }
+    } else if (passCount === 2) {
+      let black = 0
+      let white = 0
+      board.forEach((row, y3) =>
+        row.forEach((color, x3) => {
+          if (board[y3][x3] === 1) {
+            black++
+          } else if (board[y3][x3] === 2) {
+            white++
+          }
+        })
+      )
+      if (black > white) {
+        alert(black + '-' + white + '\n黒の勝ち')
+        turnCount = 0
+        passCount = 0
+        setBoard(resetBoard)
+      } else {
+        alert(black + '-' + white + '\n白の勝ち')
+        turnCount = 0
+        passCount = 0
+        setBoard(resetBoard)
+      }
+    }
+    if (passFlg) {
+      passFlg = false
+      alert('パス')
+      setTurn(3 - currentTurn)
+      setBoard(puttableBoard)
+    }
+  })
 
   const onClick = (x: number, y: number, color: number) => {
     const newBoard: number[][] = JSON.parse(JSON.stringify(board))
@@ -262,7 +315,6 @@ const Home: NextPage = () => {
           if (newBoard[vertical][beside] === 0) {
             break
           } else if (newBoard[vertical][beside] !== currentTurn) {
-            console.log(newBoard[vertical][beside])
             candidates.push({ y: vertical, x: beside })
           } else {
             turnables.push(...candidates)
@@ -274,12 +326,35 @@ const Home: NextPage = () => {
       }
     }
     if (turnables.length) {
+      turnCount++
       newBoard[y][x] = currentTurn
       setBoard(newBoard)
       const turn = currentTurn === 1 ? 2 : 1
       setTurn(turn)
     }
   }
+
+  useEffect(() => {
+    // board.findIndex((element) => console.log(element.includes(0)))
+    if (turnCount === 60) {
+      let black = 0
+      let white = 0
+      board.forEach((row, y3) =>
+        row.forEach((color, x3) => {
+          if (board[y3][x3] === 1) {
+            black++
+          } else {
+            white++
+          }
+        })
+      )
+      if (black > white) {
+        alert(black + '-' + white + '\n黒の勝ち')
+      } else {
+        alert(black + '-' + white + '\n白の勝ち')
+      }
+    }
+  })
   return (
     <Container>
       <Head>
